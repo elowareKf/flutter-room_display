@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:room_display/services/AlarmSystem.dart';
 import 'package:room_display/services/RestAPIClient.dart';
@@ -15,6 +17,7 @@ class HomeScreen extends StatefulWidget {
 class HomeScreenState extends State<HomeScreen> {
   MainDisplayInfo _data;
   String newsticker = "ELOWARE Room Display app - built with flutter";
+  File _imageFile;
 
   HomeScreenState() {
     _data = new MainDisplayInfo();
@@ -28,16 +31,23 @@ class HomeScreenState extends State<HomeScreen> {
     _data.a2Time = "05.01.2019 - 10:00";
     _data.a2Text = "Übernächster Termin";
 
-    AlarmSystem().initSystem();
+    AlarmSystem.initSystem();
 
-    Timer.periodic(Duration(seconds: 30), (t) => updateData());
-    Timer.periodic(Duration(seconds: 18), (t) => AlarmSystem.observer());
+    //Timer.periodic(Duration(seconds: 30), (t) => updateData());
+    Timer.periodic(Duration(seconds: 3), (t) => observer());
   }
 
   @override
   void initState() {
     super.initState();
     updateData();
+  }
+
+  void observer(){
+    AlarmSystem.observer();
+    setState(() {
+          _imageFile = AlarmSystem.currentImage;
+        });
   }
 
   void updateData() {
@@ -162,6 +172,10 @@ class HomeScreenState extends State<HomeScreen> {
                 Container(
                   alignment: AlignmentDirectional.bottomStart,
                   child: Text(newsticker),
+                ),
+                Container(
+                  alignment: AlignmentDirectional.topEnd,
+                child: _imageFile == null ? Text("No Image") : Image.file(_imageFile, scale: .2,),
                 ),
               ],
             )));
