@@ -16,22 +16,49 @@ class MainDisplayInfo {
   String a2Time;
   String a2Text;
 
-  String newsTicker;
-
   MainDisplayInfo();
+
+  String formateFullDate(DateTime date) =>
+      formatDate(date, [dd, '.', mm, '.', yyyy, ' - ', HH, ':', nn]);
 
   MainDisplayInfo.fromJson(jsonData) {
     try {
-      roomName = (jsonData["RoomName"] as String) ?? "";
-      appointmentText = (jsonData["Subject"] as String) ?? "";
-      appointmentOrganizer = (jsonData["Organizer"] as String) ?? "";
-      appointmentDate = formatDate(DateTime.now(), [dd,'.',mm,'.',yyyy]); //(jsonData[""] as String) ?? "";
-      appointmentTime = (jsonData["StartTime"] as String) ?? "";
-      a1Time = (jsonData["NextStart"] as String) ?? "";
-      a1Text = (jsonData["NextShortForm"] as String) ?? "";
-      a2Time = (jsonData["NextPStart"] as String) ?? "";
-      a2Text = (jsonData["NextPShortForm"] as String) ?? "";
-      newsTicker = (jsonData[""] as String) ?? "";
+      List<dynamic> rawData = jsonData as List<dynamic>;
+
+      if (rawData.length > 0) {
+        var date = DateTime.parse(rawData[0]["start"]).toLocal();
+
+        appointmentText = (rawData[0]["subject"] as String) ?? "";
+        appointmentOrganizer = (rawData[0]["organizer"] as String) ?? "";
+        appointmentDate = formatDate(date, [dd, '.', mm, '.', yyyy]);
+        appointmentTime = formatDate(date, [HH, ':', nn]);
+      }
+      else{
+        appointmentText = "Raum frei";
+        appointmentDate = "";
+        appointmentOrganizer = "";
+        appointmentTime ="";
+      }
+
+      if (rawData.length > 1) {
+        nextAppointmentsHeadline = "Nächste Termine";
+        var date = DateTime.parse(rawData[1]["start"] as String).toLocal();
+        a1Time = formateFullDate(date);
+        a1Text = (rawData[1]["subject"] as String) ?? "";
+      } else {
+        nextAppointmentsHeadline = "";
+        a1Text = "";
+        a1Time = "";
+      }
+
+      if (rawData.length > 2) {
+        var date = DateTime.parse(rawData[2]["start"] as String).toLocal();
+        a2Time = formateFullDate(date);
+        a2Text = (rawData[2]["subject"] as String) ?? "";
+      } else {
+        a2Text = "";
+        a2Time = "";
+      }
     } catch (exception) {
       print(exception);
     }
