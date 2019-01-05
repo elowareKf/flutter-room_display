@@ -24,6 +24,7 @@ dependencies:
   camera: ^0.2.8
   image: ^2.0.5
   path_provider: ^0.4.1
+  audioplayers: ^0.7.8
 
 dev_dependencies:
   flutter_test:

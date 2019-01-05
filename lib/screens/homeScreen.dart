@@ -1,11 +1,12 @@
-import 'dart:io';
-
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:room_display/services/AlarmSystem.dart';
 import 'package:room_display/services/RestAPIClient.dart';
 import 'dart:async';
 
 import '../models/mainDisplayInfo.dart';
+
+// http://www.trekcore.com/audio/redalertandklaxons/tng_red_alert3.mp3
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -17,7 +18,8 @@ class HomeScreen extends StatefulWidget {
 class HomeScreenState extends State<HomeScreen> {
   MainDisplayInfo _data;
   String newsticker = "ELOWARE Room Display app - built with flutter";
-  File _imageFile;
+  List<int> _imageFile;
+  bool _alarm = false;
 
   HomeScreenState() {
     _data = new MainDisplayInfo();
@@ -32,22 +34,35 @@ class HomeScreenState extends State<HomeScreen> {
     _data.a2Text = "Übernächster Termin";
 
     AlarmSystem.initSystem();
+    //AlarmSystem.callback = updateImage;
 
     //Timer.periodic(Duration(seconds: 30), (t) => updateData());
-    Timer.periodic(Duration(seconds: 3), (t) => observer());
+    Timer.periodic(Duration(seconds: 2), (t) => observer());
   }
 
+  
   @override
   void initState() {
     super.initState();
     updateData();
   }
 
-  void observer(){
-    AlarmSystem.observer();
+  void observer()async  {
+    var alarm = await AlarmSystem.observer();
     setState(() {
-          _imageFile = AlarmSystem.currentImage;
+      if (alarm){
+        var player = new AudioPlayer();
+        player.play("http://www.trekcore.com/audio/redalertandklaxons/tng_red_alert3.mp3");
+      }
+      
+        _alarm = alarm;  
         });
+  }
+
+  void updateImage(){
+        setState(() {
+      _imageFile = AlarmSystem.currentImage;
+    });
   }
 
   void updateData() {
@@ -101,6 +116,7 @@ class HomeScreenState extends State<HomeScreen> {
                             child: Text(
                               _data.alarmSystemText,
                               style: TextStyle(
+                                color: _alarm ? Colors.red : Colors.green,
                                 fontSize: 18,
                               ),
                             ),
@@ -175,7 +191,13 @@ class HomeScreenState extends State<HomeScreen> {
                 ),
                 Container(
                   alignment: AlignmentDirectional.topEnd,
-                child: _imageFile == null ? Text("No Image") : Image.file(_imageFile, scale: .2,),
+                  child: _imageFile == null
+                      ? Text("No Image")
+                      : Image.memory(
+                          _imageFile,
+                          width: 250,
+                          height: 250,
+                        ),
                 ),
               ],
             )));

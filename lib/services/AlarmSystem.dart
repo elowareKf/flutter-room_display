@@ -7,8 +7,8 @@ class AlarmSystem {
   static CameraDescription _camera;
   static CameraController _controller;
   static String _fileName;
-  static File currentImage;
-
+  static List<int> currentImage;
+  static Function callback;
 
   static List<Image> _images = new List<Image>();
 
@@ -39,12 +39,12 @@ class AlarmSystem {
     try {
       if (await File(_fileName).exists()) File(_fileName).deleteSync();
       await _controller.takePicture(_fileName);
-      currentImage = File(_fileName);
+      //currentImage = File(_fileName).readAsBytesSync();
 
       var image = decodeImage(new File(_fileName).readAsBytesSync());
       _images.add(image);
 
-      if (_images.length < 30) {
+      if (_images.length < 3) {
         return false;
       }
 
@@ -61,6 +61,26 @@ class AlarmSystem {
 
 
   static bool alarmCheck(List<Image> images){
-    return false;
+
+    var latest = grayscale(gaussianBlur(copyResize(images.last, 250), 2));
+    var first = grayscale(gaussianBlur(copyResize(images.first,250), 2));
+    var result = new Image(latest.width, latest.height);
+    int count = 0;
+
+    for (int w = 0; w < latest.width; w++){
+      for (int h = 0; h < latest.height; h++){
+          var value = latest.getPixel(w, h).toInt() - first.getPixel(w, h).toInt();
+          if (value < 0) value = value * -1;
+          if (value > 400000) count++;
+
+          result.setPixel(w, h, value);
+      }
+    }
+    currentImage = encodeJpg(result);
+    if (callback != null)
+      callback();
+
+      print("Alarm value $count");
+    return count > 750;
   }
 }
